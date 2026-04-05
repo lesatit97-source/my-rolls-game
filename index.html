@@ -3,121 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Роллы Premium</title>
+    <title>Мой Инвентарь</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    
     <style>
-        /* Основной стиль и анимации */
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: #03060a; color: #ffffff; height: 100vh; display: flex; justify-content: center; overflow: hidden; }
-        .app-container { width: 100%; max-width: 420px; background: radial-gradient(circle at top, #0d1726 0%, #03060a 70%); display: flex; flex-direction: column; position: relative; padding-bottom: 70px; }
-        
-        /* Шапка и Баланс */
-        .header { display: flex; justify-content: space-between; padding: 15px 20px; align-items: center; }
-        .balance-badge { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 5px 15px; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .star-icon { color: #f5c05d; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
 
-        /* Колесо */
-        .wheel-section { flex-grow: 1; display: flex; justify-content: center; align-items: center; position: relative; }
-        .wheel-outer { position: relative; width: 280px; height: 280px; }
-        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); color: #ff3d00; z-index: 10; font-size: 24px; }
-        #wheel { width: 100%; height: 100%; border-radius: 50%; background: #101a2b; border: 4px solid #0a101a; transition: transform 5s cubic-bezier(0.1, 0.8, 0.2, 1); position: relative; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .inner-circle { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 120px; height: 120px; background: #03060a; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 5; border: 2px solid #1a2639; }
-        
-        /* Кнопки ставок */
-        .betting { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .bet-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .bet-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; padding: 10px; border-radius: 12px; font-weight: bold; cursor: pointer; }
-        .bet-btn.active { border-color: #f5c05d; background: rgba(245,192,93,0.1); color: #f5c05d; }
-        .main-action { background: linear-gradient(180deg, #ff9800, #e65100); border: none; padding: 15px; border-radius: 30px; color: #fff; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 5px 15px rgba(230,81,0,0.4); }
+        h2 {
+            color: #0088cc;
+            margin-bottom: 20px;
+        }
+
+        #inventory-list {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .gift-card {
+            background: #2b2b2b;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border: 1px solid #3d3d3d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .gift-info {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button {
+            background-color: #0088cc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:active {
+            background-color: #005580;
+        }
+
+        .empty-msg {
+            color: #888;
+            text-align: center;
+            margin-top: 50px;
+        }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="header">
-        <div style="font-weight: 800; font-size: 20px;">Роллы</div>
-        <div class="balance-badge">
-            <span class="star-icon">★</span>
-            <span id="balance-val">25</span>
-        </div>
+    <h2>🎁 Мои Подарки</h2>
+    
+    <div id="inventory-list">
+        <p class="empty-msg">Загрузка инвентаря...</p>
     </div>
 
-    <div class="wheel-section">
-        <div class="wheel-outer">
-            <div class="pointer">▼</div>
-            <div id="wheel"></div>
-            <div class="inner-circle">
-                <div id="status" style="font-size: 12px; color: #aaa;">Ждем ставку</div>
-                <div id="timer" style="font-size: 24px; font-weight: bold; color: #f5c05d;">00:00</div>
-            </div>
-        </div>
-    </div>
+    <script>
+        // Инициализация Telegram WebApp
+        let tg = window.Telegram.WebApp;
+        tg.expand(); // Расширяем на весь экран
 
-    <div class="betting">
-        <div class="bet-grid">
-            <button class="bet-btn active" onclick="setBet(25, this)">25</button>
-            <button class="bet-btn" onclick="setBet(50, this)">50</button>
-            <button class="bet-btn" onclick="setBet(75, this)">75</button>
-            <button class="bet-btn" onclick="setBet(100, this)">100</button>
-        </div>
-        <button class="main-action" id="play-btn" onclick="startGame()">ПОСТАВИТЬ ★ <span id="bet-display">25</span></button>
-    </div>
-</div>
+        // Получаем ID пользователя из Telegram
+        const user = tg.initDataUnsafe.user;
+        const userId = user ? user.id : null;
 
-<script>
-    const tg = window.Telegram.WebApp;
-    tg.expand();
-
-    let balance = 25;
-    let currentBet = 25;
-    let isSpinning = false;
-    let rotation = 0;
-
-    function setBet(amt, el) {
-        if(isSpinning) return;
-        currentBet = amt;
-        document.getElementById('bet-display').innerText = amt;
-        document.querySelectorAll('.bet-btn').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-    }
-
-    function updateUI() {
-        document.getElementById('balance-val').innerText = balance;
-    }
-
-    function startGame() {
-        if(isSpinning || balance < currentBet) return;
-        
-        balance -= currentBet;
-        updateUI();
-        isSpinning = true;
-        document.getElementById('play-btn').disabled = true;
-        
-        // Математика колеса
-        const extraDegrees = Math.floor(Math.random() * 360) + 1800; 
-        rotation += extraDegrees;
-        
-        document.getElementById('wheel').style.transform = `rotate(${rotation}deg)`;
-        document.getElementById('status').innerText = "Крутим!";
-
-        setTimeout(() => {
-            isSpinning = false;
-            document.getElementById('play-btn').disabled = false;
-            // Имитация результата
-            if(Math.random() > 0.7) {
-                let win = currentBet * 2;
-                balance += win;
-                document.getElementById('status').innerText = "ПОБЕДА!";
-                tg.HapticFeedback.notificationOccurred('success');
-            } else {
-                document.getElementById('status').innerText = "ПРОИГРЫШ";
-                tg.HapticFeedback.notificationOccurred('error');
+        async function loadInventory() {
+            const listElement = document.getElementById('inventory-list');
+            
+            if (!userId) {
+                listElement.innerHTML = '<p class="empty-msg">Ошибка: ID пользователя не найден</p>';
+                return;
             }
-            updateUI();
-        }, 5000);
-    }
-</script>
 
+            try {
+                // Запрос к нашему API в main.py
+                const response = await fetch(`/api/my_gifts?user_id=${userId}`);
+                const gifts = await response.json();
+
+                if (gifts.length === 0) {
+                    listElement.innerHTML = '<p class="empty-msg">У вас пока нет доступных подарков</p>';
+                } else {
+                    listElement.innerHTML = gifts.map(gift => `
+                        <div class="gift-card">
+                            <div class="gift-info">🎁 NFT Gift #${gift.id}</div>
+                            <button onclick="withdraw(${gift.id})">Вывести</button>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                listElement.innerHTML = '<p class="empty-msg">Ошибка загрузки данных</p>';
+            }
+        }
+
+        function withdraw(giftId) {
+            tg.showConfirm(`Вы хотите вывести подарок #${giftId}?`, (ok) => {
+                if (ok) {
+                    tg.showAlert("Запрос отправлен! Ожидайте обработки.");
+                    // Здесь можно добавить fetch на сервер для смены статуса на 'withdrawn'
+                }
+            });
+        }
+
+        // Запускаем загрузку при открытии страницы
+        loadInventory();
+    </script>
 </body>
-  </html>
+</html>
